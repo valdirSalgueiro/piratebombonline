@@ -1,6 +1,8 @@
 export default class Player {
   constructor(scene, x, y) {
     this.scene = scene;
+    this.jumping = 0;
+    this.oldGround = 0;
 
     const anims = scene.anims;
     anims.create({
@@ -77,17 +79,20 @@ export default class Player {
       sprite.setAccelerationX(0);
     }
 
-    if (onGround && (keys.up.isDown || keys.w.isDown)) {
+    if ((onGround || (this.jumping === 1)) && (Phaser.Input.Keyboard.JustDown(keys.up, 500) || this.scene.input.keyboard.checkDown(keys.w, 500))) {
       sprite.setVelocityY(-700);
+      this.jumping += 1;
     }
 
     if (onGround) {
+      if (!this.oldGround)
+        this.jumping = 0;
       if (sprite.body.velocity.x !== 0) {
         sprite.anims.play("player-run", true);
       }
-      else {      
-          sprite.anims.play("player-idle", true);
-        
+      else {
+        sprite.anims.play("player-idle", true);
+
       }
     } else {
       if (sprite.body.velocity.y < 0) {
@@ -97,6 +102,7 @@ export default class Player {
         sprite.anims.play("player-fall", true);
       }
     }
+    this.oldGround = onGround;
   }
 
   destroy() {

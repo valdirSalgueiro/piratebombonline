@@ -37,6 +37,12 @@ export default class PlatformerScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player.sprite);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
+    this.foreground.forEachTile(tile => {
+      if (tile.index === 29 || tile.index === 30 || tile.index === 23 || tile.index === 24) {
+        tile.setCollision(false, false, true, false);
+      }
+    });
+
     // Help text that has a "fixed" position on the screen
     this.add
       .text(16, 16, "code: valdirSalgueiro\ngfx: pixelfrog", {
