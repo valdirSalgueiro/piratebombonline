@@ -4,6 +4,7 @@
  *  - Tileset by 0x72 under CC-0, https://0x72.itch.io/16x16-industrial-tileset
  */
 
+import PhaserMatterCollisionPlugin from "./phaser-matter-collision-plugin/index.js";
 import PlatformerScene from "./platformer-scene.js";
 
 const config = {
@@ -14,11 +15,20 @@ const config = {
   pixelArt: true,
   backgroundColor: "#1d212d",
   scene: PlatformerScene,
-  physics: {
-    default: "arcade",
-    arcade: {
-      gravity: { y: 1700 }
+   physics: {
+    default: "matter",
+    matter: {
+      gravity: { y: 1 } 
     }
+  },
+  plugins: {
+    scene: [
+      {
+        plugin: PhaserMatterCollisionPlugin, // The plugin class
+        key: "matterCollision", // Where to store in Scene.Systems, e.g. scene.sys.matterCollision
+        mapping: "matterCollision" // Where to store in the Scene, e.g. scene.matterCollision
+      }
+    ]
   }
 };
 

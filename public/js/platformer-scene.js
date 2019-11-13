@@ -31,8 +31,7 @@ export default class PlatformerScene extends Phaser.Scene {
 
     // Instantiate a player instance at the location of the "Spawn Point" object in the Tiled map
     const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
-    this.player = new Player(this, spawnPoint.x, spawnPoint.y);
-    this.physics.add.collider(this.player.sprite, this.foreground);
+    this.player = new Player(this, spawnPoint.x, spawnPoint.y);    
 
     this.cameras.main.startFollow(this.player.sprite);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -43,15 +42,20 @@ export default class PlatformerScene extends Phaser.Scene {
       }
     });
 
+    
     // Help text that has a "fixed" position on the screen
     this.add
-      .text(16, 16, "code: valdirSalgueiro\ngfx: pixelfrog", {
-        font: "18px monospace",
-        fill: "#000000",
-        padding: { x: 20, y: 10 },
-        backgroundColor: "#ffffff"
-      })
-      .setScrollFactor(0);
+    .text(16, 16, "code: valdirSalgueiro\ngfx: pixelfrog", {
+      font: "18px monospace",
+      fill: "#000000",
+      padding: { x: 20, y: 10 },
+      backgroundColor: "#ffffff"
+    })
+    .setScrollFactor(0);
+
+    this.matter.world.convertTilemapLayer(this.foreground);
+    //this.matter.world.createDebugGraphic();
+    //this.physics.add.collider(this.player.sprite, this.foreground);
   }
 
   update(time, delta) {

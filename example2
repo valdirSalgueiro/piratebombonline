@@ -1,0 +1,89 @@
+  
+            var crateGroup,dustGroup;
+            var force = 500;
+            var game = new Phaser.Game(480,480,Phaser.AUTO,'container',{
+                preload:preload,create:create,update:update
+            });
+        
+            
+            
+                
+            function preload(){
+                game.load.image("bg","assets/bg.png");
+                game.load.image("crate","assets/crate.png");
+                game.load.image("dust","assets/dust.png");
+            }
+            
+            function create(){
+                
+                //Expand our world bounds so that our camera can move
+                game.world.setBounds(-20, -20, game.width+40, game.height+40);
+                game.camera.x = 2; //Set our camera slightly moved into the game, so when shaking no black borders appear
+                game.camera.y = 2;
+                
+                var bg = game.add.sprite(240,240,"bg");
+                bg.scale.setTo(1.1); //Scale the bg to overflow the game world, so when shaking the camera, no black borders are appeared
+                bg.anchor.setTo(0.5);
+                
+                crateGroup = game.add.group(); //Create a group for crates
+                crateGroup.enableBody = true;
+                crateGroup.physicsBodyType = Phaser.Physics.ARCADE;
+                
+                //Add all crates to the crate group
+                crateGroup.create(100,100,'crate');
+                crateGroup.create(75,300,'crate');
+                crateGroup.create(240,100,'crate');
+                crateGroup.create(300,300,'crate');
+                crateGroup.create(300,200,'crate');
+                
+                crateGroup.setAll('body.immovable', true); //Set all crates to not movable
+                
+                dustGroup = game.add.group(); //Create group for dust 
+                dustGroup.enableBody = true;
+                dustGroup.physicsBodyType = Phaser.Physics.ARCADE;
+                
+                //Create dust objects
+                for(var i=0;i<50;i++){
+                    var dust = dustGroup.create(240+game.rnd.integerInRange(-20,20),240+game.rnd.integerInRange(-20,20),'dust');
+                    dust.scale.setTo(game.rnd.frac()); //Randomize the scale
+                    dust.body.mass = dust.scale.x; //Set mass according to the scale
+                    dust.body.drag = new Phaser.Point(100*dust.body.mass,100*dust.body.mass); //We set the drag according to the mass of the body
+                }
+                
+                dustGroup.setAll('body.bounce', new Phaser.Point(0.1,0.1)); //Set the bounciness of all dusts
+                
+                game.input.onTap.add(onTap, this);
+            }
+            function onTap(pointer,doubleTap){
+                for(var i=0;i<dustGroup.children.length;i++){
+                    var dust = dustGroup.children[i];
+                    var angle = new Phaser.Point(pointer.x,pointer.y).angle(dust); //Find the angle between tap position and the dust
+                    //Set the velocity to the angle multiplied by force and the mass
+                    //We can also check the distance and multiply with that factor, so near objects have greater velocity
+                    //and farther objects have lower velocity
+                    dust.body.velocity.set(Math.cos(angle)*force*dust.body.mass,Math.sin(angle)*force*dust.body.mass);
+                }
+                //Additional logic for moving the crates can be applied here if required..
+                
+                //For screen shake
+                var t = game.time.create(true)
+                t.repeat(20,10,shake,this);
+                t.start();
+                t.onComplete.addOnce(resetCam,this);
+            }
+            
+            function resetCam(){
+                //Reset camera after shake
+                this.game.camera.x = 2;
+                this.game.camera.y = 2;
+            }
+            
+            function shake(){
+                var min = -2;
+                var max = 2;
+                this.game.camera.x+= Math.floor(Math.random() * (max - min + 1)) + min;
+                this.game.camera.y+= Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+            
+            function update(){
+                game.physics.arcade.collide(dustGroup,crateGroup);//Collide dust and crates        
