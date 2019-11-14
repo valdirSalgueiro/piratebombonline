@@ -26,6 +26,8 @@ export default class Bomb extends Phaser.Physics.Arcade.Sprite {
         callbackScope: this,
         loop: false
       });
+
+      this.setCircle(15, 0, 20);
   }
 
   explode(){

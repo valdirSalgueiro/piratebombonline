@@ -47,7 +47,8 @@ export default class PlatformerScene extends Phaser.Scene {
     this.foreground.setCollisionByProperty({ collides: true });
 
 
-    const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
+    this.spawnPoints = map.filterObjects("Objects", obj => obj.name === "Spawn Point");
+    const spawnPoint = this.spawnPoints[Math.floor(Math.random() * this.spawnPoints.length - 1)];
     this.player = new Player(this, spawnPoint.x, spawnPoint.y);
 
     this.cameras.main.startFollow(this.player);
@@ -68,8 +69,8 @@ export default class PlatformerScene extends Phaser.Scene {
       })
       .setScrollFactor(0);
 
-      this.players = this.add.group();
-      this.players.add(this.player);
+    this.players = this.add.group();
+    this.players.add(this.player);
   }
 
   update(time, delta) {

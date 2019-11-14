@@ -35,25 +35,24 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     });
     anims.create({
       key: "player-hit",
-      frames: anims.generateFrameNumbers("player", { start: 50, end: 57 }),
+      frames: anims.generateFrameNumbers("player", { start: 47, end: 54 }),
       frameRate: 20,
       repeat: -1
     });
     anims.create({
       key: "player-dead",
-      frames: anims.generateFrameNumbers("player", { start: 58, end: 67 }),
-      frameRate: 20,
-      repeat: -1
+      frames: anims.generateFrameNumbers("player", { start: 55, end: 64 }),
+      frameRate: 20
     });
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    scene.physics.add.collider(this, scene.foreground);    
+    scene.physics.add.collider(this, scene.foreground);
 
     this.setDrag(1000, 0)
       .setMaxVelocity(300, 1000);
 
-    const { LEFT, RIGHT, UP, W, A, D } = Phaser.Input.Keyboard.KeyCodes;
+    const { LEFT, RIGHT, UP, A } = Phaser.Input.Keyboard.KeyCodes;
     this.keys = scene.input.keyboard.addKeys({
       left: LEFT,
       right: RIGHT,
@@ -62,8 +61,22 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     });
   }
 
-  freeze() {
-    this.body.moves = false;
+  kill() {
+    this.play("player-dead", true);
+    this.scene.isPlayerDead = true;
+    this.scene.time.addEvent({
+      delay: 5000,
+      callback: this.respawn,
+      callbackScope: this,
+      loop: false
+    });
+  }
+
+  respawn() {
+    const spawnPoint = this.scene.spawnPoints[Math.floor(Math.random() * (this.scene.spawnPoints.length - 1))];
+    this.x = spawnPoint.x;
+    this.y = spawnPoint.y;
+    this.scene.isPlayerDead = false;
   }
 
   update() {
@@ -81,11 +94,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.setAccelerationX(0);
     }
 
-    if (Phaser.Input.Keyboard.JustDown(keys.a, 500)) {
+    if (this.scene.input.keyboard.checkDown(keys.a, 2000)) {
       new Bomb(this.scene, this.body.x, this.body.y);
     }
 
-    if ((onGround || (this.jumping === 1)) && (Phaser.Input.Keyboard.JustDown(keys.up, 500))) {
+    if ((onGround || (this.jumping === 1)) && (this.scene.input.keyboard.checkDown(keys.up, 500))) {
       this.setVelocityY(-700);
       this.jumping += 1;
     }
