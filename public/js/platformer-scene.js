@@ -14,6 +14,24 @@ export default class PlatformerScene extends Phaser.Scene {
       }
     );
 
+    this.load.spritesheet(
+      "bomb",
+      "../assets/spritesheets/bomb.png",
+      {
+        frameWidth: 32,
+        frameHeight: 51
+      }
+    );
+
+    this.load.spritesheet(
+      "bomb-explosion",
+      "../assets/spritesheets/bombexplosion.png",
+      {
+        frameWidth: 96,
+        frameHeight: 108
+      }
+    );
+
     this.load.image("tiles", "../assets/tilesets/Tile-Sets (64-64).png");
     this.load.tilemapTiledJSON("map", "../assets/tilemaps/piratebomb.json");
   }
@@ -29,12 +47,10 @@ export default class PlatformerScene extends Phaser.Scene {
     this.foreground.setCollisionByProperty({ collides: true });
 
 
-    // Instantiate a player instance at the location of the "Spawn Point" object in the Tiled map
     const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
     this.player = new Player(this, spawnPoint.x, spawnPoint.y);
-    this.physics.add.collider(this.player.sprite, this.foreground);
 
-    this.cameras.main.startFollow(this.player.sprite);
+    this.cameras.main.startFollow(this.player);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
     this.foreground.forEachTile(tile => {
@@ -43,7 +59,6 @@ export default class PlatformerScene extends Phaser.Scene {
       }
     });
 
-    // Help text that has a "fixed" position on the screen
     this.add
       .text(16, 16, "code: valdirSalgueiro\ngfx: pixelfrog", {
         font: "18px monospace",
@@ -52,6 +67,9 @@ export default class PlatformerScene extends Phaser.Scene {
         backgroundColor: "#ffffff"
       })
       .setScrollFactor(0);
+
+      this.players = this.add.group();
+      this.players.add(this.player);
   }
 
   update(time, delta) {
