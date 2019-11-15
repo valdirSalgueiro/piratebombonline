@@ -7,7 +7,6 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.scene = scene;
     this.jumping = 0;
     this.oldGround = 0;
-    this.playerId = id;
 
     const anims = scene.anims;
     anims.create({
@@ -63,7 +62,10 @@ export default class Player extends Phaser.GameObjects.Sprite {
     });
   }
 
-  kill() {
+  kill(killerId) {
+    if(this.scene.isPlayerDead)
+      return;
+
     this.play("player-dead", true);
     this.scene.isPlayerDead = true;
     this.scene.time.addEvent({
@@ -73,7 +75,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
       callbackScope: this,
       loop: false
     });
-    this.scene.socket.emit('playerDead');
+    this.scene.socket.emit('playerDead', killerId);
   }
 
   respawn() {
@@ -84,7 +86,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
   }
 
   shoot(){
-    new Bomb(this.scene, this.body.x, this.body.y);
+    new Bomb(this.scene, this.body.x, this.body.y, this.playerId);
     this.scene.socket.emit('playerShoot');
   }
 

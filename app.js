@@ -15,7 +15,7 @@ const ChatModel = require('./models/chatModel');
 
 // setup mongo connection
 const uri = process.env.MONGO_CONNECTION_URL;
-mongoose.connect(uri, { useNewUrlParser : true, useCreateIndex: true, useUnifiedTopology: true });
+mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true });
 mongoose.connection.on('error', (error) => {
   console.log(error);
   process.exit(1);
@@ -34,31 +34,30 @@ const players = {};
 
 io.on('connection', function (socket) {
   console.log('a user connected: ', socket.id);
-  // create a new player and add it to our players object
   players[socket.id] = {
-    flipX: false,
-    x: Math.floor(Math.random() * 400) + 50,
-    y: Math.floor(Math.random() * 500) + 50,
     playerId: socket.id
   };
-  // send the players object to the new player
   socket.emit('currentPlayers', players);
-  // update all other players of the new player
   socket.broadcast.emit('newPlayer', players[socket.id]);
 
-  // when a player disconnects, remove them from our players object
   socket.on('disconnect', function () {
     console.log('user disconnected: ', socket.id);
     delete players[socket.id];
-    // emit a message to all players to remove this player
     io.emit('disconnect', socket.id);
   });
 
-  // when a plaayer moves, update the player data
   socket.on('playerMovement', function (movementData) {
-    players[socket.id] = { ...players[socket.id] , ... movementData };
-    // emit a message to all players about the player that moved
+    players[socket.id] = { ...players[socket.id], ...movementData };
     socket.broadcast.emit('playerMoved', players[socket.id]);
+  });
+
+  socket.on('playerShoot', () => {
+    socket.broadcast.emit('playerShoot', { id: socket.id, x: players[socket.id].x, y: players[socket.id].y });
+  });
+
+  socket.on('playerDead', (killerId) => {
+    console.log(`${killerId} killed ${socket.id}`)
+    socket.broadcast.emit('playerDead', { id: socket.id, killerId });
   });
 });
 
@@ -70,7 +69,7 @@ app.use(cookieParser());
 // require passport auth
 require('./auth/auth');
 
-app.get('/game.html', passport.authenticate('jwt', { session : false }), function (req, res) {
+app.get('/game.html', passport.authenticate('jwt', { session: false }), function (req, res) {
   res.sendFile(__dirname + '/public/game.html');
 });
 
@@ -87,9 +86,9 @@ app.get('/', function (req, res) {
 // main routes
 app.use('/', routes);
 app.use('/', passwordRoutes);
-app.use('/', passport.authenticate('jwt', { session : false }), secureRoutes);
+app.use('/', passport.authenticate('jwt', { session: false }), secureRoutes);
 
-app.post('/submit-chatline', passport.authenticate('jwt', { session : false }), asyncMiddleware(async (req, res, next) => {
+app.post('/submit-chatline', passport.authenticate('jwt', { session: false }), asyncMiddleware(async (req, res, next) => {
   const { message } = req.body;
   const { email, name } = req.user;
   await ChatModel.create({ email, message, game: 'pirate' });

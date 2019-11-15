@@ -1,7 +1,8 @@
 export default class BombExplosion extends Phaser.Physics.Arcade.Sprite {
 
-  constructor(scene, x, y) {
+  constructor(scene, x, y, id) {
     super(scene, x, y, 'bomb-explosion');
+    this.playerId = id;
 
     const anims = scene.anims;
     anims.create({
@@ -18,16 +19,16 @@ export default class BombExplosion extends Phaser.Physics.Arcade.Sprite {
     });
     this.play('bomb-explosion');
 
-    this.overlap = scene.physics.add.overlap(scene.players, this, this.boom, null, this);
+    this.overlap = scene.physics.add.overlap(scene.player, this, this.boom, null, this);
   }
 
   boom(player, bomb) {
     let angle = Math.atan2(player.y - bomb.y, player.x - bomb.x);
     let force = (100 - Phaser.Math.Distance.Between(player.x, player.y, bomb.x, bomb.y)) * 100;
-    player.kill();
+    player.kill(bomb.playerId);
     player.body.setAccelerationX(0);
     player.body.velocity.x += Math.cos(angle) * force * 5;
     player.body.velocity.y += Math.sin(angle) * force;
-    this.overlap.active = false;    
+    this.overlap.active = false;
   }
 }

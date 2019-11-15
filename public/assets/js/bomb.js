@@ -2,10 +2,11 @@ import BombExplosion from './bombexplosion.js'
 
 export default class Bomb extends Phaser.Physics.Arcade.Sprite {
 
-  constructor (scene, x, y)
+  constructor (scene, x, y, id)
   {
       super(scene, x, y, 'bomb');
       this.scene = scene;
+      this.playerId = id;
 
       const anims = scene.anims;
       anims.create({
@@ -31,7 +32,7 @@ export default class Bomb extends Phaser.Physics.Arcade.Sprite {
   }
 
   explode(){
-    new BombExplosion(this.scene, this.x, this.y);
+    new BombExplosion(this.scene, this.x, this.y, this.playerId);
     this.destroy();
   }
 }
