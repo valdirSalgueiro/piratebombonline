@@ -37,7 +37,8 @@ export default class PlatformerScene extends Phaser.Scene {
   }
 
   create() {
-    this.socket = io();
+    //this.socket = io();
+    this.socket = io(':3000');
     this.isPlayerDead = false;
     this.elapsedTime = 0;
 
@@ -78,9 +79,9 @@ export default class PlatformerScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (this.isPlayerDead) return;
+    if (!this.isPlayerDead)
+      this.player.update();
 
-    this.player.update();
     this.elapsedTime += delta;
     if (this.elapsedTime > 50) {
       this.socket.emit('playerMovement', { x: this.player.x, y: this.player.y, flipX: this.player.flipX, animation: this.player.anims.currentAnim.key });
@@ -122,6 +123,7 @@ export default class PlatformerScene extends Phaser.Scene {
         if (playerInfo.playerId === player.playerId) {
           player.flipX = playerInfo.flipX;
           player.setPosition(playerInfo.x, playerInfo.y);
+          player.play(playerInfo.animation, true);
         }
       }.bind(this));
     }.bind(this));

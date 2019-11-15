@@ -1,6 +1,6 @@
 import Bomb from './bomb.js'
 
-export default class Player extends Phaser.Physics.Arcade.Sprite {
+export default class Player extends Phaser.GameObjects.Sprite {
   constructor(scene, x, y, id) {
     super(scene, x, y, 'player');
 
@@ -47,10 +47,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     });
 
     scene.add.existing(this);
+
     scene.physics.add.existing(this);
     scene.physics.add.collider(this, scene.foreground);
 
-    this.setDrag(1000, 0)
+    this.body.setDrag(1000, 0)
       .setMaxVelocity(300, 1000);
 
     const { LEFT, RIGHT, UP, A } = Phaser.Input.Keyboard.KeyCodes;
@@ -93,13 +94,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     const acceleration = onGround ? 600 : 200;
 
     if (keys.left.isDown) {
-      this.setAccelerationX(-acceleration);
+      this.body.setAccelerationX(-acceleration);
       this.setFlipX(true);
     } else if (keys.right.isDown) {
-      this.setAccelerationX(acceleration);
+      this.body.setAccelerationX(acceleration);
       this.setFlipX(false);
     } else {
-      this.setAccelerationX(0);
+      this.body.setAccelerationX(0);
     }
 
     if (this.scene.input.keyboard.checkDown(keys.a, 2000)) {
@@ -107,7 +108,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     if ((onGround || (this.jumping === 1)) && (this.scene.input.keyboard.checkDown(keys.up, 500))) {
-      this.setVelocityY(-700);
+      this.body.setVelocityY(-700);
       this.jumping += 1;
     }
 
