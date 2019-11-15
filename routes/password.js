@@ -50,7 +50,7 @@ router.post('/forgot-password', asyncMiddleware(async (req, res, next) => {
     template: 'forgot-password',
     subject: 'Phaser Leaderboard Password Reset',
     context: {
-      url: `http://localhost:${process.env.PORT || 5000}/reset-password.html?token=${token}`,
+      url: `http://localhost:${process.env.PORT || 3000}/reset-password.html?token=${token}`,
       name: user.name
     }
   };

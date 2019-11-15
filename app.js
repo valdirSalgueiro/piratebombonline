@@ -15,7 +15,7 @@ const ChatModel = require('./models/chatModel');
 
 // setup mongo connection
 const uri = process.env.MONGO_CONNECTION_URL;
-mongoose.connect(uri, { useNewUrlParser : true, useCreateIndex: true, useUnifiedTopology: true});
+mongoose.connect(uri, { useNewUrlParser : true, useCreateIndex: true, useUnifiedTopology: true });
 mongoose.connection.on('error', (error) => {
   console.log(error);
   process.exit(1);
@@ -72,9 +72,9 @@ app.use(cookieParser());
 // require passport auth
 require('./auth/auth');
 
-// app.get('/game.html', passport.authenticate('jwt', { session : false }), function (req, res) {
-//   res.sendFile(__dirname + '/public/game.html');
-// });
+app.get('/game.html', passport.authenticate('jwt', { session : false }), function (req, res) {
+  res.sendFile(__dirname + '/public/game.html');
+});
 
 app.get('/game.html', function (req, res) {
   res.sendFile(__dirname + '/public/game.html');
@@ -113,6 +113,6 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message });
 });
 
-server.listen(process.env.PORT || 5000, () => {
-  console.log(`Server started on port ${process.env.PORT || 5000}`);
+server.listen(process.env.PORT || 3000, () => {
+  console.log(`Server started on port ${process.env.PORT || 3000}`);
 });
