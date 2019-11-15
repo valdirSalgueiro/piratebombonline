@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const tokenList = {};
 const router = express.Router();
 
+router.getName = token => tokenList[token] && tokenList[token].name;
+
 router.get('/status', (req, res, next) => {
   res.status(200).json({ status: 'ok' });
 });

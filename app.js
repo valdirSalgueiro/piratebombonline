@@ -35,7 +35,9 @@ const players = {};
 io.on('connection', function (socket) {
   console.log('a user connected: ', socket.id);
   players[socket.id] = {
-    playerId: socket.id
+    playerId: socket.id,
+    kills: 0,
+    deaths: 0
   };
   socket.emit('currentPlayers', players);
   socket.broadcast.emit('newPlayer', players[socket.id]);
@@ -55,9 +57,23 @@ io.on('connection', function (socket) {
     socket.broadcast.emit('playerShoot', { id: socket.id, x: players[socket.id].x, y: players[socket.id].y });
   });
 
+  socket.on('setToken', (token) => {
+    const name = routes.getName(token);
+    console.log(`${socket.id}: ${name}`);
+    players[socket.id].name = name;
+    io.emit('setName', socket.id, name);
+  });
+
   socket.on('playerDead', (killerId) => {
     console.log(`${killerId} killed ${socket.id}`)
-    socket.broadcast.emit('playerDead', { id: socket.id, killerId });
+    if (killerId == socket.id) {
+      players[socket.id].deaths++;
+    }
+    else {
+      players[killerId].kills++;
+      players[socket.id].deaths++;
+    }
+    io.emit('score', players);
   });
 });
 

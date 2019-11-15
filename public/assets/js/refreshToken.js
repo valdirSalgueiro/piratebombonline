@@ -24,7 +24,7 @@ setInterval(function() {
     success: function(data) {},
     error: function(xhr) {
       window.alert(JSON.stringify(xhr));
-      window.location.replace('/index.html');
+      window.location.href = '/index.html';
     }
   });
 }, 10000);

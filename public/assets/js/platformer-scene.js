@@ -42,6 +42,7 @@ export default class PlatformerScene extends Phaser.Scene {
     this.socket = io(':3000');
     this.isPlayerDead = false;
     this.elapsedTime = 0;
+    this.scoreTime = 0;
 
     this.inputMessage = document.getElementById('inputMessage');
     this.messages = document.getElementById('messages');
@@ -90,6 +91,10 @@ export default class PlatformerScene extends Phaser.Scene {
 
     this.createConnectionCallbacks();
 
+    const token = getCookie('refreshJwt');
+    console.log(token);
+    this.socket.emit('setToken', token);
+
     window.addEventListener('keydown', event => {
       if (event.which === 13) {
         this.sendMessage();
@@ -107,17 +112,20 @@ export default class PlatformerScene extends Phaser.Scene {
       this.player.update();
 
     this.elapsedTime += delta;
+    this.scoreTime += delta;
     if (this.elapsedTime > 50) {
       this.socket.emit('playerMovement', { x: this.player.x, y: this.player.y, flipX: this.player.flipX, animation: this.player.anims.currentAnim.key });
       this.elapsedTime = 0;
     }
 
-    let highScoreText = '';
-    this.players.getChildren().forEach(function (player) {
-      highScoreText += player.playerId + "\n";
-    });
-    this.highScore.setText(highScoreText);
-
+    if (this.scoreTime > 1000) {
+      let highScoreText = 'Name/Kills/Deaths\n';
+      this.players.getChildren().forEach(function (player) {
+        highScoreText += `${player.name}/${player.kills}/${player.deaths} \n`;
+      });
+      this.highScore.setText(highScoreText);
+      this.scoreTime = 0;
+    }
   }
 
   addOtherPlayers(playerInfo) {
@@ -125,6 +133,9 @@ export default class PlatformerScene extends Phaser.Scene {
     otherPlayer.setTint(Math.random() * 0xffffff);
     otherPlayer.setVisible(false);
     otherPlayer.playerId = playerInfo.playerId;
+    otherPlayer.name = playerInfo.name;
+    otherPlayer.kills = playerInfo.kills;
+    otherPlayer.deaths = playerInfo.deaths;
     this.players.add(otherPlayer);
   }
 
@@ -137,6 +148,8 @@ export default class PlatformerScene extends Phaser.Scene {
         }
         else {
           this.player.playerId = this.socket.id;
+          this.player.kills = 0;
+          this.player.deaths = 0;
           console.log('my id ' + this.socket.id);
         }
       }.bind(this));
@@ -151,6 +164,25 @@ export default class PlatformerScene extends Phaser.Scene {
         if (playerId === player.playerId) {
           player.destroy();
         }
+      }.bind(this));
+    }.bind(this));
+
+    this.socket.on('setName', function (playerId, name) {
+      this.players.getChildren().forEach(function (player) {
+        if (playerId === player.playerId) {
+          player.name = name;
+        }
+      }.bind(this));
+    }.bind(this));
+
+    this.socket.on('score', function (players) {
+      Object.keys(players).forEach(function (id) {
+        this.players.getChildren().forEach(function (player) {
+          if (player.playerId == id) {
+            player.kills = players[id].kills;
+            player.deaths = players[id].deaths;
+          }
+        }.bind(this)); //ugly as fuck, object group worth this?
       }.bind(this));
     }.bind(this));
 
