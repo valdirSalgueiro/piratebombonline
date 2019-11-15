@@ -94,7 +94,7 @@ app.use('/', passport.authenticate('jwt', { session : false }), secureRoutes);
 app.post('/submit-chatline', passport.authenticate('jwt', { session : false }), asyncMiddleware(async (req, res, next) => {
   const { message } = req.body;
   const { email, name } = req.user;
-  await ChatModel.create({ email, message });
+  await ChatModel.create({ email, message, game: 'pirate' });
   io.emit('new message', {
     username: name,
     message,

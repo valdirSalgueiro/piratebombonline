@@ -6,6 +6,10 @@ const ChatSchema = new Schema({
   email: {
     type: String,
     required: true
+  },  
+  game: {
+    type: String,
+    required: true
   },
   message: {
     type: String,
