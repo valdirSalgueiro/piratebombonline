@@ -104,10 +104,6 @@ export default class PlatformerScene extends Phaser.Scene {
 
     this.createConnectionCallbacks();
 
-    const token = getCookie('refreshJwt');
-
-    this.socket.emit('setToken', token);
-
     window.addEventListener('keydown', event => {
       if (event.which === 13) {
         this.sendMessage();
@@ -172,14 +168,6 @@ export default class PlatformerScene extends Phaser.Scene {
         if (playerId === player.playerId) {
           player.destroy();
           this.players.remove(player);
-        }
-      }.bind(this));
-    }.bind(this));
-
-    this.socket.on('setName', function (playerId, name) {
-      this.players.getChildren().forEach(function (player) {
-        if (playerId === player.playerId) {
-          player.name = name;
         }
       }.bind(this));
     }.bind(this));
@@ -249,18 +237,7 @@ export default class PlatformerScene extends Phaser.Scene {
     let message = this.inputMessage.value;
     if (message) {
       this.inputMessage.value = '';
-      $.ajax({
-        type: 'POST',
-        url: '/submit-chatline',
-        data: {
-          message,
-          refreshToken: getCookie('refreshJwt')
-        },
-        success: function (data) { },
-        error: function (xhr) {
-          console.log(xhr);
-        }
-      })
+      //post      
     }
   }
 }
