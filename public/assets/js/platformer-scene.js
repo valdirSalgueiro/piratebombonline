@@ -38,8 +38,7 @@ export default class PlatformerScene extends Phaser.Scene {
   }
 
   create() {
-    //this.socket = io();
-    this.socket = io(':3000');
+    this.socket = io();
     this.isPlayerDead = false;
     this.elapsedTime = 0;
     this.scoreTime = 0;
