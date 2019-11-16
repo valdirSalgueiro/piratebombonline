@@ -53,8 +53,8 @@ io.on('connection', function (socket) {
     socket.broadcast.emit('playerMoved', players[socket.id]);
   });
 
-  socket.on('playerShoot', () => {
-    socket.broadcast.emit('playerShoot', { id: socket.id, x: players[socket.id].x, y: players[socket.id].y });
+  socket.on('playerShoot', (x, y) => {
+    socket.broadcast.emit('playerShoot', { id: socket.id, x, y });
   });
 
   socket.on('setToken', (token) => {

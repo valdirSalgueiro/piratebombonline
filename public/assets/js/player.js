@@ -9,11 +9,11 @@ export default class Player extends Phaser.GameObjects.Sprite {
     scene.physics.add.existing(this);
     scene.physics.add.collider(this, scene.foreground);
     this.body.setDrag(1000, 0)
-      .setMaxVelocity(300, 1000);    
-    
-    if(enemy)
-    return;
-    
+      .setMaxVelocity(300, 1000);
+
+    if (enemy)
+      return;
+
     this.scene = scene;
     this.jumping = 0;
     this.oldGround = 0;
@@ -65,7 +65,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
   }
 
   kill(killerId) {
-    if(this.scene.isPlayerDead)
+    if (this.scene.isPlayerDead)
       return;
 
     this.play("player-dead", true);
@@ -87,9 +87,9 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.scene.isPlayerDead = false;
   }
 
-  shoot(){
+  shoot() {
     new Bomb(this.scene, this.body.x, this.body.y, this.playerId);
-    this.scene.socket.emit('playerShoot');
+    this.scene.socket.emit('playerShoot', this.body.x, this.body.y);
   }
 
   update() {
