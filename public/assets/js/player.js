@@ -1,9 +1,19 @@
 import Bomb from './bomb.js'
 
 export default class Player extends Phaser.GameObjects.Sprite {
-  constructor(scene, x, y, id) {
+  constructor(scene, x, y, enemy = false) {
     super(scene, x, y, 'player');
 
+    scene.add.existing(this);
+
+    scene.physics.add.existing(this);
+    scene.physics.add.collider(this, scene.foreground);
+    this.body.setDrag(1000, 0)
+      .setMaxVelocity(300, 1000);    
+    
+    if(enemy)
+    return;
+    
     this.scene = scene;
     this.jumping = 0;
     this.oldGround = 0;
@@ -44,14 +54,6 @@ export default class Player extends Phaser.GameObjects.Sprite {
       frames: anims.generateFrameNumbers("player", { start: 55, end: 64 }),
       frameRate: 20
     });
-
-    scene.add.existing(this);
-
-    scene.physics.add.existing(this);
-    scene.physics.add.collider(this, scene.foreground);
-
-    this.body.setDrag(1000, 0)
-      .setMaxVelocity(300, 1000);
 
     const { LEFT, RIGHT, UP, A } = Phaser.Input.Keyboard.KeyCodes;
     this.keys = scene.input.keyboard.addKeys({
@@ -133,9 +135,5 @@ export default class Player extends Phaser.GameObjects.Sprite {
       }
     }
     this.oldGround = onGround;
-  }
-
-  destroy() {
-    this.this.destroy();
   }
 }

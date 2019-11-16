@@ -57,7 +57,7 @@ export default class PlatformerScene extends Phaser.Scene {
 
     this.spawnPoints = map.filterObjects("Objects", obj => obj.name === "Spawn Point");
     const spawnPoint = this.spawnPoints[Math.floor(Math.random() * (this.spawnPoints.length - 1))];
-    this.player = new Player(this, spawnPoint.x, spawnPoint.y, this.socket.id);
+    this.player = new Player(this, spawnPoint.x, spawnPoint.y);
 
     this.cameras.main.startFollow(this.player);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -114,7 +114,7 @@ export default class PlatformerScene extends Phaser.Scene {
     this.elapsedTime += delta;
     this.scoreTime += delta;
     if (this.elapsedTime > 50) {
-      this.socket.emit('playerMovement', { x: this.player.x, y: this.player.y, flipX: this.player.flipX, animation: this.player.anims.currentAnim.key });
+      this.socket.emit('playerMovement', { dx: this.player.body.velocity.x, dy: this.player.body.velocity.y, x: this.player.x, y: this.player.y, flipX: this.player.flipX, animation: this.player.anims.currentAnim.key });
       this.elapsedTime = 0;
     }
 
@@ -129,7 +129,8 @@ export default class PlatformerScene extends Phaser.Scene {
   }
 
   addOtherPlayers(playerInfo) {
-    const otherPlayer = this.add.sprite(playerInfo.x, playerInfo.y, 'player');
+    //const otherPlayer = this.add.sprite(playerInfo.x, playerInfo.y, 'player');
+    const otherPlayer = new Player(this, playerInfo.x, playerInfo.y, true);
     otherPlayer.setTint(Math.random() * 0xffffff);
     otherPlayer.setVisible(false);
     otherPlayer.playerId = playerInfo.playerId;
@@ -190,6 +191,7 @@ export default class PlatformerScene extends Phaser.Scene {
       this.players.getChildren().forEach(function (player) {
         if (playerInfo.playerId === player.playerId) {
           player.flipX = playerInfo.flipX;
+          player.body.setVelocity(playerInfo.dx, playerInfo.dy);
           player.setPosition(playerInfo.x, playerInfo.y);
           if (player.currentAnim != 'player-dead') {
             player.play(playerInfo.animation, true);
