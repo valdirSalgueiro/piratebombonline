@@ -152,6 +152,7 @@ export default class PlatformerScene extends Phaser.Scene {
       this.players.getChildren().forEach(function (player) {
         if (playerId === player.playerId) {
           player.destroy();
+          this.players.remove(player);
         }
       }.bind(this));
     }.bind(this));
@@ -183,6 +184,15 @@ export default class PlatformerScene extends Phaser.Scene {
           player.currentAnim = playerInfo.animation;
 
           player.setVisible(true);
+        }
+      }.bind(this));
+    }.bind(this));
+
+    this.socket.on('playerDead', function (killerId, dx, dy) {
+      this.players.getChildren().forEach(function (player) {
+        if (killerId === player.playerId) {
+          player.play('player-dead');
+          player.die(dx, dy);
         }
       }.bind(this));
     }.bind(this));

@@ -25,10 +25,9 @@ export default class BombExplosion extends Phaser.Physics.Arcade.Sprite {
   boom(player, bomb) {
     let angle = Math.atan2(player.y - bomb.y, player.x - bomb.x);
     let force = (100 - Phaser.Math.Distance.Between(player.x, player.y, bomb.x, bomb.y)) * 100;
-    player.body.setAccelerationX(0);
-    player.body.velocity.x += Math.cos(angle) * force * 5;
-    player.body.velocity.y += Math.sin(angle) * force;
-    player.kill(bomb.playerId, player.body.velocity.x, player.body.velocity.y);
+    const dx = Math.cos(angle) * force;
+    const dy = Math.sin(angle) * force;
+    player.kill(bomb.playerId, dx, dy);
     this.overlap.active = false;
   }
 }

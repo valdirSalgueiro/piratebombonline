@@ -64,7 +64,15 @@ export default class Player extends Phaser.GameObjects.Sprite {
     });
   }
 
+  die(dx, dy){
+    this.body.setAccelerationX(0);
+    this.body.velocity.x += dx * 10;
+    this.body.velocity.y += dy;
+  }
+
   kill(killerId, dx, dy) {
+    this.die(dx, dy);   
+
     if (this.scene.isPlayerDead)
       return;
 

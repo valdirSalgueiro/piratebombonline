@@ -28,10 +28,7 @@ mongoose.set('useFindAndModify', false);
 // create an instance of an express app
 const app = express();
 const server = require('http').Server(app);
-const io = require('socket.io').listen(server, {
-  pingInterval: 5000,
-  pingTimeout: 2000
-});
+const io = require('socket.io').listen(server);
 
 const players = {};
 
@@ -68,7 +65,7 @@ io.on('connection', function (socket) {
     io.emit('setName', socket.id, name);
   });
 
-  socket.on('playerDead', (killerId) => {
+  socket.on('playerDead', (killerId, dx, dy) => {
     console.log(`${killerId} killed ${socket.id}`)
     if (killerId == socket.id) {
       players[socket.id].deaths++;
@@ -78,6 +75,7 @@ io.on('connection', function (socket) {
       players[socket.id].deaths++;
     }
     players[socket.id].score = players[socket.id].kills - players[socket.id].deaths;
+    socket.broadcast.emit('playerDead', socket.id, dx, dy);
   });
 
   setInterval(() => {
