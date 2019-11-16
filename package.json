@@ -21,8 +21,7 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "serve public",
-    "online": "node app.js"
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",
