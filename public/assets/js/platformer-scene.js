@@ -41,7 +41,6 @@ export default class PlatformerScene extends Phaser.Scene {
     this.socket = io();
     this.isPlayerDead = false;
     this.elapsedTime = 0;
-    this.scoreTime = 0;
 
     this.inputMessage = document.getElementById('inputMessage');
     this.messages = document.getElementById('messages');
@@ -107,23 +106,13 @@ export default class PlatformerScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (!this.isPlayerDead)
+    if (!this.isPlayerDead) {
       this.player.update();
-
-    this.elapsedTime += delta;
-    this.scoreTime += delta;
-    if (this.elapsedTime > 50) {
-      this.socket.emit('playerMovement', { dx: this.player.body.velocity.x, dy: this.player.body.velocity.y, x: this.player.x, y: this.player.y, flipX: this.player.flipX, animation: this.player.anims.currentAnim.key });
-      this.elapsedTime = 0;
-    }
-
-    if (this.scoreTime > 1000) {
-      let highScoreText = 'Name/Kills/Deaths\n';
-      this.players.getChildren().forEach(function (player) {
-        highScoreText += `${player.name}/${player.kills}/${player.deaths} \n`;
-      });
-      this.highScore.setText(highScoreText);
-      this.scoreTime = 0;
+      this.elapsedTime += delta;
+      if (this.elapsedTime > 50) {
+        this.socket.emit('playerMovement', { dx: this.player.body.velocity.x, dy: this.player.body.velocity.y, x: this.player.x, y: this.player.y, flipX: this.player.flipX, animation: this.player.anims.currentAnim.key });
+        this.elapsedTime = 0;
+      }
     }
   }
 
@@ -176,14 +165,12 @@ export default class PlatformerScene extends Phaser.Scene {
     }.bind(this));
 
     this.socket.on('score', function (players) {
-      Object.keys(players).forEach(function (id) {
-        this.players.getChildren().forEach(function (player) {
-          if (player.playerId == id) {
-            player.kills = players[id].kills;
-            player.deaths = players[id].deaths;
-          }
-        }.bind(this)); //ugly as fuck, object group worth this?
+      let highScoreText = 'Name/Kills/Deaths\n';
+      players.sort((a, b) => a.score - b.score);
+      players.forEach(function (player) {
+        highScoreText += `${player.name}/${player.kills}/${player.deaths} \n`;
       }.bind(this));
+      this.highScore.setText(highScoreText);
     }.bind(this));
 
     this.socket.on('playerMoved', function (playerInfo) {
@@ -192,9 +179,7 @@ export default class PlatformerScene extends Phaser.Scene {
           player.flipX = playerInfo.flipX;
           player.body.setVelocity(playerInfo.dx, playerInfo.dy);
           player.setPosition(playerInfo.x, playerInfo.y);
-          if (player.currentAnim != 'player-dead') {
-            player.play(playerInfo.animation, true);
-          }
+          player.play(playerInfo.animation, true);
           player.currentAnim = playerInfo.animation;
 
           player.setVisible(true);

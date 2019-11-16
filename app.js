@@ -28,7 +28,10 @@ mongoose.set('useFindAndModify', false);
 // create an instance of an express app
 const app = express();
 const server = require('http').Server(app);
-const io = require('socket.io').listen(server);
+const io = require('socket.io').listen(server, {
+  pingInterval: 5000,
+  pingTimeout: 2000
+});
 
 const players = {};
 
@@ -37,7 +40,8 @@ io.on('connection', function (socket) {
   players[socket.id] = {
     playerId: socket.id,
     kills: 0,
-    deaths: 0
+    deaths: 0,
+    score: 0
   };
   socket.emit('currentPlayers', players);
   socket.broadcast.emit('newPlayer', players[socket.id]);
@@ -73,8 +77,13 @@ io.on('connection', function (socket) {
       players[killerId].kills++;
       players[socket.id].deaths++;
     }
-    io.emit('score', players);
+    players[socket.id].score = players[socket.id].kills - players[socket.id].deaths;
   });
+
+  setInterval(() => {
+    const values = Object.values(players);
+    io.emit('score', values);
+  }, 1000);
 });
 
 // update express settings

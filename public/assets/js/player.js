@@ -64,7 +64,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
     });
   }
 
-  kill(killerId) {
+  kill(killerId, dx, dy) {
     if (this.scene.isPlayerDead)
       return;
 
@@ -77,7 +77,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
       callbackScope: this,
       loop: false
     });
-    this.scene.socket.emit('playerDead', killerId);
+    this.scene.socket.emit('playerDead', killerId, dx, dy);
   }
 
   respawn() {
