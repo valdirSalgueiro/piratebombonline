@@ -35,12 +35,14 @@ export default class PlatformerScene extends Phaser.Scene {
 
     this.load.image("tiles", "../assets/tilesets/Tile-Sets (64-64).png");
     this.load.tilemapTiledJSON("map", "../assets/tilemaps/piratebomb.json");
+    this.load.audio('bgm', '../assets/sfx/Nario - The Tale of a Pirate.mp3');
   }
 
   create() {
     this.socket = io();
     this.isPlayerDead = false;
     this.elapsedTime = 0;
+    this.mute = false;
 
     this.inputMessage = document.getElementById('inputMessage');
     this.messages = document.getElementById('messages');
@@ -75,6 +77,19 @@ export default class PlatformerScene extends Phaser.Scene {
       })
       .setScrollFactor(0);
 
+    this.musicText = this.add
+      .text(16, 100, "Mute music", {
+        font: "18px monospace",
+        fill: "#000000",
+        padding: { x: 20, y: 10 },
+        backgroundColor: "#ffffff"
+      }).setInteractive()
+      .on('pointerdown', () => {
+        this.mute = !this.mute;
+        bgm.setMute(this.mute);
+        this.musicText.setText(!this.mute ? "Mute music" : "Unmute music");
+      });
+
     this.highScore = this.add
       .text(this.cameras.main.width - 400, 16, "", {
         font: "18px monospace",
@@ -90,7 +105,7 @@ export default class PlatformerScene extends Phaser.Scene {
     this.createConnectionCallbacks();
 
     const token = getCookie('refreshJwt');
-    console.log(token);
+
     this.socket.emit('setToken', token);
 
     window.addEventListener('keydown', event => {
@@ -103,11 +118,15 @@ export default class PlatformerScene extends Phaser.Scene {
         }
       }
     });
+
+    var bgm = this.sound.add('bgm', { volume: 0.4 });
+    bgm.setLoop(true);
+    bgm.play();
   }
 
   update(time, delta) {
     if (!this.isPlayerDead) {
-      this.player.update();
+      this.player.update(delta);
       this.elapsedTime += delta;
       if (this.elapsedTime > 50) {
         this.socket.emit('playerMovement', { dx: this.player.body.velocity.x, dy: this.player.body.velocity.y, x: this.player.x, y: this.player.y, flipX: this.player.flipX, animation: this.player.anims.currentAnim.key });

@@ -17,6 +17,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.scene = scene;
     this.jumping = 0;
     this.oldGround = 0;
+    this.fireTimer = 9999;
 
     const anims = scene.anims;
     anims.create({
@@ -64,14 +65,14 @@ export default class Player extends Phaser.GameObjects.Sprite {
     });
   }
 
-  die(dx, dy){
+  die(dx, dy) {
     this.body.setAccelerationX(0);
     this.body.velocity.x += dx * 10;
     this.body.velocity.y += dy;
   }
 
   kill(killerId, dx, dy) {
-    this.die(dx, dy);   
+    this.die(dx, dy);
 
     if (this.scene.isPlayerDead)
       return;
@@ -100,7 +101,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.scene.socket.emit('playerShoot', this.body.x, this.body.y);
   }
 
-  update() {
+  update(delta) {
     const { keys, body } = this;
     const onGround = body.blocked.down;
     const acceleration = onGround ? 600 : 200;
@@ -115,8 +116,9 @@ export default class Player extends Phaser.GameObjects.Sprite {
       this.body.setAccelerationX(0);
     }
 
-    if (this.scene.input.keyboard.checkDown(keys.a, 2000)) {
+    if (this.fireTimer > 1000 && keys.a.isDown) {
       this.shoot();
+      this.fireTimer = 0;
     }
 
     if ((onGround || (this.jumping === 1)) && (this.scene.input.keyboard.checkDown(keys.up, 500))) {
@@ -132,7 +134,6 @@ export default class Player extends Phaser.GameObjects.Sprite {
       }
       else {
         this.play("player-idle", true);
-
       }
     } else {
       if (this.body.velocity.y < 0) {
@@ -143,5 +144,6 @@ export default class Player extends Phaser.GameObjects.Sprite {
       }
     }
     this.oldGround = onGround;
+    this.fireTimer += delta;
   }
 }
