@@ -2,15 +2,59 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Login Page</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-  <link href="assets/css/main.css" rel="stylesheet">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Login</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            background: #e2e2e2;
+        }
+
+        body {
+            background: #e2e2e2;
+            margin: 0;
+            padding: 0;
+            font-family: 'Lato', sans-serif;
+        }
+
+        .login-form-wrap {
+            background: radial-gradient(ellipse at center, rgba(81, 112, 173, 1) 0%, rgba(53, 84, 147, 1) 100%);
+            width: 360px;
+            margin: 60px auto;
+            padding: 3px 3px 3px 3px;
+            text-align: center;
+        }
+
+        .login-form-wrap a {
+            font-family: 'Lato', sans-serif;
+            font-weight: 400;
+            display: block;
+            width: 100%;
+            border: none;            
+            padding: 8px;
+            font-size: 17px;
+            color: white;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+            box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.17), 0 1px 0 rgba(255, 255, 255, 0.36) inset;
+            font-weight: 700;
+        }
+
+        .login-form-wrap a:hover {
+            background: rgba(81, 112, 173, 1);
+        }
+    </style>
 </head>
 
-<body class="text-center">
+<body class="text-center" >
+    <img src="assets/piratebomblogo.png" style="display: block;  margin: 0 auto;"/>
+    <section class="login-form-wrap">
+        <a href='/auth'>Login with Facebook</div>
+    </section>
 </body>
+
 
 </html>

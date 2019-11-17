@@ -30,46 +30,63 @@ mongoose.connection.on('connected', function () {
 });
 mongoose.set('useFindAndModify', false);
 
-
 var sessionStore = new MongoStore({ mongooseConnection: mongoose.connection });
-var sessionMiddleWare = session({
+//var sessionStore = new MongoStore({ url: process.env.MONGO_CONNECTION_URL });
+app.use(express.static(path.join(__dirname, 'public')));
+var cookieParserObj = require('cookie-parser')('pbomb'); // <- your secret here
+app.use(cookieParser());
+app.use(session({
   store: sessionStore,
   secret: 'pbomb',
   resave: false,
   saveUninitialized: true
-});
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(sessionMiddleWare);
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(bodyParser.json());
 
-io.use(passportSocketIo.authorize({
-  cookieParser: cookieParser,
-  key: 'connect.sid',
-  secret: 'pbomb',
-  store: sessionStore,
-  success: onAuthorizeSuccess,
-  fail: onAuthorizeFail,
-}));
+io.use(function (socket, next) {
+  cookieParserObj(socket.handshake, {}, function (err) {    
+    if (err) {
+      console.log("error in parsing cookie");
+      return next(err);
+    }
+    if (!socket.handshake.signedCookies) {
+      console.log("no secureCookies|signedCookies found");
+      return next(new Error("no secureCookies found"));
+    }
+    sessionStore.get(socket.handshake.signedCookies["connect.sid"], function (err, session) {
+      socket.session = session;
+      console.log(session);
+      if (!err && !session) err = new Error('session not found');
+      if (err) {
+        console.log('failed connection to socket.io:', err);
+      } else {
+        console.log('successful connection to socket.io');
+      }
+      next(err);
+    });
+  });
+});
 
 function onAuthorizeSuccess(data, accept) {
   console.log('successful connection to socket.io');
+  console.log(data);
   accept();
 }
 
 function onAuthorizeFail(data, message, error, accept) {
+  console.log('error');
   console.log(message);
+  console.log(error);
   accept(new Error(message));
 }
 
 io.on('connection', function (socket) {
   console.log('a user connected: ', socket.id);
-  const { first_name } = socket.request.user._json;
-  console.log(first_name);
+  console.log(socket.session);
   players[socket.id] = {
     playerId: socket.id,
-    name: first_name,
     kills: 0,
     deaths: 0,
     score: 0
@@ -132,9 +149,11 @@ passport.use(
     function (accessToken, refreshToken, profile, done) {
       const { email, first_name, last_name } = profile._json;
       const userData = {
+        email,
         firstName: first_name,
         lastName: last_name
       };
+      console.log(userData);
       //new userModel(userData).save();
       done(null, profile);
     }
