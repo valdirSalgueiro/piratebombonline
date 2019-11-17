@@ -11,6 +11,7 @@ const strategy = require('passport-facebook');
 const cookieParser = require('cookie-parser');
 const userRoutes = require('./userRoutes');
 var bodyParser = require('body-parser');
+const UserModel = require('./models/userModel');
 
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
@@ -105,10 +106,15 @@ io.on('connection', function (socket) {
     socket.broadcast.emit('playerDead', socket.id, dx, dy);
   });
 
+  socket.on('new message', message => {
+    io.emit('new message', { username: players[socket.id].name, message });
+  });
+
+
   setInterval(() => {
     const values = Object.values(players);
     io.emit('score', values);
-  }, 1000);
+  }, 3000);
 });
 
 app.use("/", userRoutes);
@@ -129,13 +135,13 @@ passport.use(
       callbackURL: process.env.FACEBOOK_CALLBACK_URL,
       profileFields: ["email", "name"]
     },
-    function (accessToken, refreshToken, profile, done) {
-      const { email, first_name, last_name } = profile._json;
-      const userData = {
-        firstName: first_name,
-        lastName: last_name
+    async (accessToken, refreshToken, profile, done) => {
+      const { first_name, last_name } = profile._json;
+      const user = await UserModel.find({ id: profile.id });
+      if (!user) {
+          await UserModel.create({ id: profile.id, lastName: last_name, name: first_name });
+          console.log('user persisted');
       };
-      //new userModel(userData).save();
       done(null, profile);
     }
   )

@@ -237,7 +237,7 @@ export default class PlatformerScene extends Phaser.Scene {
     let message = this.inputMessage.value;
     if (message) {
       this.inputMessage.value = '';
-      //post      
+      this.socket.emit('new message', message);
     }
   }
 }
