@@ -19,7 +19,7 @@ export default class BombExplosion extends Phaser.Physics.Arcade.Sprite {
     });
     this.play('bomb-explosion');
 
-    this.overlap = scene.physics.add.overlap(scene.player, this, this.boom, null, this);
+    this.overlap = scene.physics.add.overlap(scene.bots, this, this.boom, null, this);
   }
 
   boom(player, bomb) {

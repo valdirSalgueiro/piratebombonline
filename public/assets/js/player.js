@@ -1,23 +1,24 @@
-import Bomb from './bomb.js'
+import Bomb from "./bomb.js";
+import Input from "./input.js";
 
 export default class Player extends Phaser.GameObjects.Sprite {
   constructor(scene, x, y, enemy = false) {
-    super(scene, x, y, 'player');
+    super(scene, x, y, "player");
 
     scene.add.existing(this);
 
     scene.physics.add.existing(this);
     scene.physics.add.collider(this, scene.foreground);
-    this.body.setDrag(1000, 0)
-      .setMaxVelocity(300, 1000);
+    this.body.setDrag(1000, 0).setMaxVelocity(300, 1000);
 
-    if (enemy)
-      return;
+    if (enemy) return;
 
     this.scene = scene;
     this.jumping = 0;
     this.oldGround = 0;
-    this.fireTimer = 9999;
+    this.fireTimer = Infinity;
+    this.jumpTimer = Infinity;
+    this.dead = false;
 
     const anims = scene.anims;
     anims.create({
@@ -61,7 +62,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
       left: LEFT,
       right: RIGHT,
       up: UP,
-      a: A,
+      a: A
     });
   }
 
@@ -74,11 +75,10 @@ export default class Player extends Phaser.GameObjects.Sprite {
   kill(killerId, dx, dy) {
     this.die(dx, dy);
 
-    if (this.scene.isPlayerDead)
-      return;
+    if (this.dead) return;
 
     this.play("player-dead", true);
-    this.scene.isPlayerDead = true;
+    this.dead = true;
     this.scene.time.addEvent({
       delay: 5000,
       //delay: 500,
@@ -86,64 +86,83 @@ export default class Player extends Phaser.GameObjects.Sprite {
       callbackScope: this,
       loop: false
     });
-    this.scene.socket.emit('playerDead', killerId, dx, dy);
+    this.scene.socket.emit("playerDead", this.playerId, killerId, dx, dy);
   }
 
   respawn() {
-    const spawnPoint = this.scene.spawnPoints[Math.floor(Math.random() * (this.scene.spawnPoints.length - 1))];
+    const spawnPoint = this.scene.spawnPoints[
+      Math.floor(Math.random() * (this.scene.spawnPoints.length - 1))
+    ];
     this.x = spawnPoint.x;
-    this.y = spawnPoint.y;
-    this.scene.isPlayerDead = false;
-  }
-
-  shoot() {
-    new Bomb(this.scene, this.body.x, this.body.y, this.playerId);
-    this.scene.socket.emit('playerShoot', this.body.x, this.body.y);
+    this.y = spawnPoint.y - 10;
+    this.dead = false;
   }
 
   update(delta) {
-    const { keys, body } = this;
+    const { keys } = this;
+    let direction = 0;
+    direction |= keys.left.isDown ? Input.LEFT : 0;
+    direction |= keys.right.isDown ? Input.RIGHT : 0;
+    direction |= keys.up.isDown ? Input.UP : 0;
+    direction |= keys.a.isDown ? Input.A : 0;
+
+    this.updatePlayer(delta, direction);
+  }
+
+  updatePlayer(delta, direction) {
+    if (this.dead) return;
+
+    const { body } = this;
     const onGround = body.blocked.down;
     const acceleration = onGround ? 600 : 200;
 
-    if (keys.left.isDown) {
+    if (direction & Input.LEFT) {
       this.body.setAccelerationX(-acceleration);
       this.setFlipX(true);
-    } else if (keys.right.isDown) {
+    } else if (direction & Input.RIGHT) {
       this.body.setAccelerationX(acceleration);
       this.setFlipX(false);
     } else {
       this.body.setAccelerationX(0);
     }
 
-    if (this.fireTimer > 1000 && keys.a.isDown) {
-      this.shoot();
+    if (direction & Input.A) {
+      if (this.fireTimer > 1000) {
+        const centeredX = this.body.x + this.width / 2;
+        new Bomb(this.scene, centeredX, this.body.y, this.playerId);
+        this.scene.socket.emit("playerShoot", centeredX, this.body.y);
+        this.fireTimer = 0;
+      }
       this.fireTimer = 0;
     }
 
-    if ((onGround || (this.jumping === 1)) && (this.scene.input.keyboard.checkDown(keys.up, 500))) {
-      this.body.setVelocityY(-700);
-      this.jumping += 1;
+    if (direction & Input.UP) {
+      if ((onGround || this.jumping === 1) && this.jumpTimer > 300) {
+        this.body.setVelocityY(-700);
+        this.jumping += 1;
+        this.jumpTimer = 0;
+      }
     }
 
     if (onGround) {
-      if (!this.oldGround)
+      if (!this.oldGround) {
         this.jumping = 0;
+        this.jumpTimer = 0;
+      }
       if (this.body.velocity.x !== 0) {
         this.play("player-run", true);
-      }
-      else {
+      } else {
         this.play("player-idle", true);
       }
     } else {
       if (this.body.velocity.y < 0) {
         this.play("player-jump", true);
-      }
-      else {
+      } else {
         this.play("player-fall", true);
       }
     }
     this.oldGround = onGround;
     this.fireTimer += delta;
+    this.jumpTimer += delta;
   }
 }
