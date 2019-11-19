@@ -25,7 +25,7 @@ module.exports = (io, players) => {
         deaths: 0,
         score: 0
       };
-      io.emit("botConnect", id);
+      socket.broadcast.emit("newPlayer", id);
     });
 
     socket.on("disconnect", function() {
@@ -47,7 +47,7 @@ module.exports = (io, players) => {
     socket.on("playerDead", (id, killerId, dx, dy) => {
       const playerId = id ? id : socket.id;
       console.log(`${killerId} killed ${playerId}`);
-      if (killerId == socket.id) {
+      if (killerId == playerId) {
         players[playerId].deaths++;
       } else {
         players[killerId].kills++;

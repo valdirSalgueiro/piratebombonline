@@ -133,11 +133,10 @@ export default class Player extends Phaser.GameObjects.Sprite {
         this.scene.socket.emit("playerShoot", centeredX, this.body.y);
         this.fireTimer = 0;
       }
-      this.fireTimer = 0;
     }
 
     if (direction & Input.UP) {
-      if ((onGround || this.jumping === 1) && this.jumpTimer > 300) {
+      if (this.jumping <= 1 && this.jumpTimer > 300) {
         this.body.setVelocityY(-700);
         this.jumping += 1;
         this.jumpTimer = 0;
@@ -147,7 +146,6 @@ export default class Player extends Phaser.GameObjects.Sprite {
     if (onGround) {
       if (!this.oldGround) {
         this.jumping = 0;
-        this.jumpTimer = 0;
       }
       if (this.body.velocity.x !== 0) {
         this.play("player-run", true);

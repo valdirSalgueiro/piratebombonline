@@ -62,6 +62,15 @@ export default class PlatformerScene extends Phaser.Scene {
     this.bot.playerId =
       "bot_" + Math.floor(Math.random() * 0x10000).toString(16);
     this.bot.setTint(0xff0000);
+    this.bot.tileSpawnPoints = [
+      ...this.spawnPoints.map(sp => ({
+        x: Math.floor(sp.x / 64),
+        y: Math.floor(sp.y / 64)
+      }))
+    ];
+    this.bot.spawnPoints = [...this.bot.tileSpawnPoints];
+    this.bot.strategy = 0;
+    this.getNextSpawnPoint();
 
     this.cameras.main.startFollow(this.player);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -134,9 +143,77 @@ export default class PlatformerScene extends Phaser.Scene {
     bgm.play();
   }
 
+  getClosestPoint() {
+    
+    this.bot.stuckTimer = 0;
+    if (this.bot.spawnPoints.length == 1) {
+      this.bot.currentSpawnPoint = this.bot.spawnPoints.splice(0, 1)[0];      
+      return;
+    }
+
+    if (this.bot.spawnPoints.length == 0)
+      this.bot.spawnPoints = [...this.bot.tileSpawnPoints];
+
+    let distance = Infinity;
+    let closestSpawnPoint = 0;
+    for (var i = 0; i < this.bot.spawnPoints.length; i++) {
+      const newDistance = Phaser.Math.Distance.Between(
+        this.bot.x,
+        this.bot.y,
+        this.bot.spawnPoints[i].x,
+        this.bot.spawnPoints[i].y
+      );
+      if (newDistance < distance) {
+        distance = newDistance;
+        closestSpawnPoint = i;
+      }
+    }
+    const removedPoint = this.bot.spawnPoints.splice(closestSpawnPoint, 1);
+    this.bot.currentSpawnPoint = removedPoint[0];
+  }
+
+  getNextSpawnPoint() {
+    this.bot.strategy = !this.bot.strategy;
+    if (this.bot.strategy) {
+      this.getClosestPoint();
+    } else {
+      const index = Math.floor(
+        Math.random() * (this.bot.tileSpawnPoints.length)
+      );
+      this.bot.currentSpawnPoint = this.bot.tileSpawnPoints[index];
+    }
+  }
+
   update(time, delta) {
+    let botDirection = 0;
+    const tileX = Math.floor(this.bot.x / 64);
+    const tileY = Math.floor(this.bot.y / 64);
+    if (this.bot.currentSpawnPoint.x < tileX) {
+      botDirection |= Input.LEFT;
+    } else if (this.bot.currentSpawnPoint.x > tileX) {
+      botDirection |= Input.RIGHT;
+    }
+
+    if (this.bot.currentSpawnPoint.y < tileY) {
+      botDirection |= Input.UP;
+    }
+
+    if (
+      (this.bot.currentSpawnPoint.y == tileY &&
+        this.bot.currentSpawnPoint.x == tileX) ||
+      this.bot.stuckTimer > 1500
+    ) {
+      this.getNextSpawnPoint();
+    }
+
     this.player.update(delta);
-    this.bot.updatePlayer(delta, Input.LEFT);
+    this.bot.updatePlayer(delta, botDirection);
+    if (tileX == this.bot.oldTileX && tileY == this.bot.oldTileY) {
+      this.bot.stuckTimer += delta;
+    }
+
+    this.bot.oldTileX = tileX;
+    this.bot.oldTileY = tileY;
 
     this.elapsedTime += delta;
     if (this.elapsedTime > 50) {
@@ -153,7 +230,6 @@ export default class PlatformerScene extends Phaser.Scene {
   }
 
   addOtherPlayers(playerInfo) {
-    //const otherPlayer = this.add.sprite(playerInfo.x, playerInfo.y, 'player');
     const otherPlayer = new Player(this, playerInfo.x, playerInfo.y, true);
     otherPlayer.setTint(Math.random() * 0xffffff);
     otherPlayer.setVisible(false);
@@ -177,7 +253,6 @@ export default class PlatformerScene extends Phaser.Scene {
               this.player.playerId = this.socket.id;
               this.player.kills = 0;
               this.player.deaths = 0;
-              console.log("my id " + this.socket.id);
               this.socket.emit("botConnect", this.bot.playerId);
             }
           }.bind(this)
@@ -210,7 +285,7 @@ export default class PlatformerScene extends Phaser.Scene {
       "score",
       function(players) {
         let highScoreText = "Name/Kills/Deaths\n";
-        players.sort((a, b) => a.score - b.score);
+        players.sort((a, b) => b.score - a.score);
         players.forEach(
           function(player) {
             highScoreText += `${player.name}/${player.kills}/${player.deaths} \n`;
