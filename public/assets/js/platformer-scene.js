@@ -144,10 +144,8 @@ export default class PlatformerScene extends Phaser.Scene {
   }
 
   getClosestPoint() {
-    
-    this.bot.stuckTimer = 0;
     if (this.bot.spawnPoints.length == 1) {
-      this.bot.currentSpawnPoint = this.bot.spawnPoints.splice(0, 1)[0];      
+      this.bot.currentSpawnPoint = this.bot.spawnPoints.splice(0, 1)[0];
       return;
     }
 
@@ -173,13 +171,12 @@ export default class PlatformerScene extends Phaser.Scene {
   }
 
   getNextSpawnPoint() {
+    this.bot.stuckTimer = 0;
     this.bot.strategy = !this.bot.strategy;
     if (this.bot.strategy) {
       this.getClosestPoint();
     } else {
-      const index = Math.floor(
-        Math.random() * (this.bot.tileSpawnPoints.length)
-      );
+      const index = Math.floor(Math.random() * this.bot.tileSpawnPoints.length);
       this.bot.currentSpawnPoint = this.bot.tileSpawnPoints[index];
     }
   }
@@ -206,11 +203,13 @@ export default class PlatformerScene extends Phaser.Scene {
       this.getNextSpawnPoint();
     }
 
-    this.player.update(delta);
-    this.bot.updatePlayer(delta, botDirection);
     if (tileX == this.bot.oldTileX && tileY == this.bot.oldTileY) {
       this.bot.stuckTimer += delta;
+    } else {
+      botDirection |= Input.A;
     }
+    this.player.update(delta);
+    this.bot.updatePlayer(delta, botDirection);
 
     this.bot.oldTileX = tileX;
     this.bot.oldTileY = tileY;
