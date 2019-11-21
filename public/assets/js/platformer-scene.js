@@ -210,7 +210,7 @@ export default class PlatformerScene extends Phaser.Scene {
     }
     this.player.update(delta);
     this.player.updateText();
-    this.bot.updatePlayer(delta, 0);
+    this.bot.updatePlayer(delta, botDirection);
     this.bot.updateText();
 
     this.bot.oldTileX = tileX;
