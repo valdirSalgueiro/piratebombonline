@@ -58,10 +58,9 @@ export default class PlatformerScene extends Phaser.Scene {
     const botSpawnPoint = this.spawnPoints[
       Math.floor(Math.random() * (this.spawnPoints.length - 1))
     ];
-    this.bot = new Player(this, botSpawnPoint.x, botSpawnPoint.y - 10);
-    this.bot.playerId =
+    this.bot = new Player(this, botSpawnPoint.x, botSpawnPoint.y - 10, true);
+    this.bot.playerId = this.bot.playerName =
       "bot_" + Math.floor(Math.random() * 0x10000).toString(16);
-    this.bot.setTint(0xff0000);
     this.bot.tileSpawnPoints = [
       ...this.spawnPoints.map(sp => ({
         x: Math.floor(sp.x / 64),
@@ -70,6 +69,7 @@ export default class PlatformerScene extends Phaser.Scene {
     ];
     this.bot.spawnPoints = [...this.bot.tileSpawnPoints];
     this.bot.strategy = 0;
+    this.bot.playerNameText.setText(this.bot.playerName);
     this.getNextSpawnPoint();
 
     this.cameras.main.startFollow(this.player);
@@ -209,7 +209,9 @@ export default class PlatformerScene extends Phaser.Scene {
       botDirection |= Input.A;
     }
     this.player.update(delta);
-    this.bot.updatePlayer(delta, botDirection);
+    this.player.updateText();
+    this.bot.updatePlayer(delta, 0);
+    this.bot.updateText();
 
     this.bot.oldTileX = tileX;
     this.bot.oldTileY = tileY;
@@ -224,18 +226,34 @@ export default class PlatformerScene extends Phaser.Scene {
         flipX: this.player.flipX,
         animation: this.player.anims.currentAnim.key
       });
+      this.socket.emit("playerMovement", {
+        dx: this.bot.body.velocity.x,
+        dy: this.bot.body.velocity.y,
+        x: this.bot.x,
+        y: this.bot.y,
+        flipX: this.bot.flipX,
+        animation: this.bot.anims.currentAnim.key,
+        id: this.bot.playerId
+      });
       this.elapsedTime = 0;
     }
+
+    this.players.getChildren().forEach(
+      function(player) {
+        player.updateText();
+      }.bind(this)
+    );
   }
 
   addOtherPlayers(playerInfo) {
     const otherPlayer = new Player(this, playerInfo.x, playerInfo.y, true);
-    otherPlayer.setTint(Math.random() * 0xffffff);
     otherPlayer.setVisible(false);
     otherPlayer.playerId = playerInfo.playerId;
-    otherPlayer.name = playerInfo.name;
+    otherPlayer.playerName = playerInfo.playerName;
     otherPlayer.kills = playerInfo.kills;
     otherPlayer.deaths = playerInfo.deaths;
+    otherPlayer.playerNameText.setText(otherPlayer.playerName);
+    console.log(`new player ${playerInfo.playerId} ${playerInfo.playerName}`);
     this.players.add(otherPlayer);
   }
 
@@ -252,10 +270,12 @@ export default class PlatformerScene extends Phaser.Scene {
               this.player.playerId = this.socket.id;
               this.player.kills = 0;
               this.player.deaths = 0;
-              this.socket.emit("botConnect", this.bot.playerId);
+              this.player.playerName = players[id].playerName;
+              this.player.playerNameText.setText(this.player.playerName);
             }
           }.bind(this)
         );
+        this.socket.emit("botConnect", this.bot.playerId);
       }.bind(this)
     );
 
@@ -272,6 +292,7 @@ export default class PlatformerScene extends Phaser.Scene {
         this.players.getChildren().forEach(
           function(player) {
             if (playerId === player.playerId) {
+              player.playerNameText && player.playerNameText.destroy();
               player.destroy();
               this.players.remove(player);
             }
@@ -287,7 +308,7 @@ export default class PlatformerScene extends Phaser.Scene {
         players.sort((a, b) => b.score - a.score);
         players.forEach(
           function(player) {
-            highScoreText += `${player.name}/${player.kills}/${player.deaths} \n`;
+            highScoreText += `${player.playerName}/${player.kills}/${player.deaths} \n`;
           }.bind(this)
         );
         this.highScore.setText(highScoreText);
@@ -303,9 +324,10 @@ export default class PlatformerScene extends Phaser.Scene {
               player.flipX = playerInfo.flipX;
               player.body.setVelocity(playerInfo.dx, playerInfo.dy);
               player.setPosition(playerInfo.x, playerInfo.y);
-              player.play(playerInfo.animation, true);
-              player.currentAnim = playerInfo.animation;
-
+              if (playerInfo.animation != "player-dead") {
+                player.play(playerInfo.animation, true);
+                player.currentAnim = playerInfo.animation;
+              }
               player.setVisible(true);
             }
           }.bind(this)
@@ -315,10 +337,10 @@ export default class PlatformerScene extends Phaser.Scene {
 
     this.socket.on(
       "playerDead",
-      function(killerId, dx, dy) {
+      function(playerId, dx, dy) {
         this.players.getChildren().forEach(
           function(player) {
-            if (killerId === player.playerId) {
+            if (playerId === player.playerId) {
               player.play("player-dead");
               player.die(dx, dy);
             }

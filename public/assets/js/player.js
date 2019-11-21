@@ -11,14 +11,23 @@ export default class Player extends Phaser.GameObjects.Sprite {
     scene.physics.add.collider(this, scene.foreground);
     this.body.setDrag(1000, 0).setMaxVelocity(300, 1000);
 
-    if (enemy) return;
-
     this.scene = scene;
     this.jumping = 0;
     this.oldGround = 0;
     this.fireTimer = Infinity;
     this.jumpTimer = Infinity;
     this.dead = false;
+
+
+    this.playerNameText = scene.add
+    .text(16, 16, "", {
+      font: "18px monospace",
+      fill: enemy ? "blue" : "white"
+    })
+    .setScrollFactor(0);
+    if (enemy) {
+      return;
+    }
 
     const anims = scene.anims;
     anims.create({
@@ -81,7 +90,6 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.dead = true;
     this.scene.time.addEvent({
       delay: 5000,
-      //delay: 500,
       callback: this.respawn,
       callbackScope: this,
       loop: false
@@ -109,6 +117,13 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.updatePlayer(delta, direction);
   }
 
+  updateText() {
+    if (this.playerNameText) {
+      this.playerNameText.x = Math.floor(this.x - this.width / 2);
+      this.playerNameText.y = Math.floor(this.y - this.height);
+    }
+  }
+
   updatePlayer(delta, direction) {
     if (this.dead) return;
 
@@ -130,7 +145,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
       if (this.fireTimer > 1000) {
         const centeredX = this.body.x + this.width / 2;
         new Bomb(this.scene, centeredX, this.body.y, this.playerId);
-        this.scene.socket.emit("playerShoot", centeredX, this.body.y);
+        this.scene.socket.emit("playerShoot", this.playerId, centeredX, this.body.y);
         this.fireTimer = 0;
       }
     }

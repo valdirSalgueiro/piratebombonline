@@ -19,7 +19,6 @@ const MongoStore = require("connect-mongo")(session);
 const passportSocketIo = require("passport.socketio");
 
 const FacebookStrategy = strategy.Strategy;
-const players = {};
 
 const uri = process.env.MONGO_CONNECTION_URL;
 mongoose.connect(uri, {
@@ -70,8 +69,7 @@ function onAuthorizeFail(data, message, error, accept) {
   accept(new Error(message));
 }
 
-const players = {};
-processSocket(io, players);
+processSocket(io);
 
 app.use("/", userRoutes);
 

@@ -7,7 +7,7 @@ const processSocket = require('./socket');
 
 app.use(express.static(path.join(__dirname, "public")));
 const players = {};
-processSocket(io, players);
+processSocket(io);
 
 server.listen(process.env.PORT || 3000, () => {
   console.log(`Server started on port ${process.env.PORT || 3000}`);
