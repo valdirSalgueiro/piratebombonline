@@ -6,7 +6,6 @@ const path = require("path");
 const processSocket = require('./socket');
 
 app.use(express.static(path.join(__dirname, "public")));
-const players = {};
 processSocket(io);
 
 server.listen(process.env.PORT || 3000, () => {
