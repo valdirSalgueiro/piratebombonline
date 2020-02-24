@@ -270,7 +270,7 @@ function onLoad() {
     // Try to get as squared as possible
     //
     var numTiles = tiles.length;
-    var numCols = Math.min(8, numTiles) | 0;
+    var numCols = Math.min(16, numTiles) | 0;
     var numRows = Math.ceil(numTiles / numCols);
 
     extractedTilesWidth = numCols * tileWidth;
